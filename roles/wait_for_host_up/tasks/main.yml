@@ -3,6 +3,15 @@
 - name: wait for SSH to respond on host
   local_action: wait_for port=22 host={{ inventory_hostname }} timeout={{ timeout if timeout is defined else 300 }}
 
+# Workaround for https://bugzilla.redhat.com/show_bug.cgi?id=1413926
+# Seems there is a delay between port 22 coming online and SSH being ready.
+- name: test that SSH login is working before proceeding
+  local_action: command ssh "{{ ansible_user }}@{{ inventory_hostname }}" -i {{ private_key_path }} -o PasswordAuthentication=no -o StrictHostKeyChecking=no exit
+  register: ssh_test_result
+  until: ssh_test_result.rc == 0
+  retries: 30
+  delay: 5
+  when: private_key_path is defined
 
 - name: Gather facts
   setup:
