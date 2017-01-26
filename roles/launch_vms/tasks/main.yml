@@ -110,8 +110,13 @@
       dns_servers: '{{ nameservers if nameservers is defined else None }}'
       authorized_ssh_keys: '{{ ssh_key }}'
       custom_script: |
+        bootcmd:
+          - [ 'cloud-init-per', 'once', 'systemctl', 'disable', 'sshd' ]
+          - [ 'cloud-init-per', 'once', 'systemctl', 'stop', 'sshd' ]
         runcmd:
           - [ 'systemctl', 'restart', 'network']
+          - [ 'systemctl', 'enable', 'sshd' ]
+          - [ 'systemctl', 'start', 'sshd' ]
 
   register: vm_start_jobs
   async: 3600
